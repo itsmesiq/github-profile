@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-import { ProfileImage } from '@/components/ui/images';
+import ProfileImage from '@/assets/images/profile.png';
 
 export function ProfileHero() {
     return (
@@ -18,11 +18,23 @@ export function ProfileHero() {
                 </div>
             </div>
             <div className="flex items-center gap-6 p-6">
-                <div className="relative flex min-h-[515px] min-w-[515px] items-center justify-center rounded-2xl border border-primary shadow-[inset_0_0_20px_0_#3df2bc]/20">
+                <div className="relative flex min-h-[515px] min-w-[515px] items-center justify-center overflow-hidden rounded-2xl border border-primary shadow-[inset_0_0_20px_0_#3df2bc]/20">
                     <span className="absolute top-3 left-5 font-mono text-[10px] tracking-[4px] text-primary uppercase">
                         visual.map
                     </span>
-                    <Image src={ProfileImage} alt="Profile" width={463} height={515} unoptimized />
+                    <Image
+                        src={ProfileImage}
+                        alt="Profile"
+                        width={463}
+                        height={515}
+                        className="relative z-10 object-contain"
+                    />
+                    <div
+                        aria-hidden="true"
+                        className="profile-scanline pointer-events-none absolute inset-x-0 z-20 flex items-center justify-center"
+                    >
+                        <div className="h-0.5 w-full bg-[linear-gradient(90deg,rgba(31,108,114,0)_0%,#1f6c72_30%,#3df2bc_50%,#1f6c72_70%,rgba(31,108,114,0)_100%)]" />
+                    </div>
                 </div>
                 <div className="relative flex min-h-[515px] w-full flex-col justify-between rounded-2xl border border-primary p-6 shadow-[inset_0_0_20px_0_#3df2bc]/20">
                     <span className="absolute top-3 left-5 font-mono text-[10px] tracking-[4px] text-primary uppercase">
@@ -37,11 +49,12 @@ export function ProfileHero() {
                             <span className="pb-[1px]">Languages</span>
                         </div>
                         <div className="flex w-full flex-col gap-5">
-                            <div className="my-2 h-[1px] w-full border border-dashed border-primary"></div>
-                            <div className="my-2 h-[1px] w-full border border-dashed border-primary"></div>
-                            <div className="my-2 h-[1px] w-full border border-dashed border-primary"></div>
-                            <div className="my-2 h-[1px] w-full border border-dashed border-primary"></div>
-                            <div className="my-2 h-[1px] w-full border border-dashed border-primary"></div>
+                            {Array.from({ length: 5 }).map((_, index) => (
+                                <div
+                                    key={index}
+                                    className="my-2 h-[1px] w-full border border-dashed border-primary"
+                                ></div>
+                            ))}
                         </div>
                         <div className="flex flex-col gap-5 whitespace-nowrap">
                             <span className="pb-[1px]">Ana Siqueira</span>
@@ -51,7 +64,7 @@ export function ProfileHero() {
                             <span className="pb-[1px]">TypeScript | JavaScript | HTML | CSS</span>
                         </div>
                     </div>
-                    <div className="item-center flex w-full justify-between gap-15 border-t border-dashed border-primary pt-5">
+                    <div className="flex w-full items-center justify-between gap-15 border-t border-dashed border-primary pt-5">
                         <div className="w-full">
                             <div className="mb-2 flex items-center justify-between">
                                 <span className="font-mono text-xs text-primary uppercase">
@@ -99,7 +112,6 @@ export function ProfileHero() {
                     </div>
                 </div>
             </div>
-            <div className="my-2 h-0.5 w-full bg-[linear-gradient(90deg,rgba(31,108,114,0.00)_0%,#1F6C72_30%,#3DF2BC_50%,#1F6C72_70%,rgba(31,108,114,0.00)_100%)]"></div>
         </article>
     );
 }

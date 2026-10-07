@@ -40,3 +40,32 @@ body {
     color: var(--foreground);
     font-family: var(--font-sans);
 }
+
+.profile-scanline {
+    top: -20%;
+    height: 60px;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(61, 242, 188, 0.02) 20%,
+        rgba(61, 242, 188, 0.16) 50%,
+        rgba(61, 242, 188, 0.02) 80%,
+        transparent 100%
+    );
+
+    animation: profile-scan 5s ease-in-out infinite;
+}
+
+@keyframes profile-scan {
+    0% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(680px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
