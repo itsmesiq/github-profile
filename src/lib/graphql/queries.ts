@@ -6,10 +6,15 @@ export const GITHUB_PROFILE_QUERY = `
 
             repositories(
                 first: 100
+                after: null
                 ownerAffiliations: OWNER
                 privacy: PUBLIC
             ) {
-                totalCount    
+                totalCount 
+                pageInfo {
+                    hasNextPage
+                    endCursor
+                }   
 
                 nodes {
                     isFork
@@ -37,6 +42,35 @@ export const GITHUB_PROFILE_QUERY = `
                         contributionDays {
                             date
                             contributionCount
+                        }
+                    }
+                }
+            }
+        }
+    }
+`;
+
+export const GITHUB_REPOSITORIES_QUERY = `
+    query GithubRepositories($login: String!, $cursor: String) {
+        user(login: $login) {
+            repositories(
+                first: 100
+                after: $cursor
+                ownerAffiliations: OWNER
+                privacy: PUBLIC
+            ) {
+                pageInfo {
+                    hasNextPage
+                    endCursor
+                }    
+                nodes {
+                    isFork
+                    languages(first: 10, orderBy: { field: SIZE, direction: DESC }) {
+                        edges {
+                            size
+                            node {
+                                name
+                            }
                         }
                     }
                 }

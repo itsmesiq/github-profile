@@ -1,20 +1,29 @@
+interface GithubRepository {
+    isFork: boolean;
+    languages: {
+        edges: Array<{
+            size: number;
+            node: {
+                name: string;
+            };
+        }>;
+    };
+}
+
+interface GithubRepositoryConnection {
+    pageInfo: {
+        hasNextPage: boolean;
+        endCursor: string | null;
+    };
+    nodes: GithubRepository[];
+}
+
 export interface GithubProfileQueryResponse {
     user: {
         name: string | null;
         login: string;
-        repositories: {
+        repositories: GithubRepositoryConnection & {
             totalCount: number;
-            nodes: Array<{
-                isFork: boolean;
-                languages: {
-                    edges: Array<{
-                        size: number;
-                        node: {
-                            name: string;
-                        };
-                    }>;
-                };
-            }>;
         };
         pullRequests: {
             totalCount: number;
@@ -30,5 +39,11 @@ export interface GithubProfileQueryResponse {
                 }>;
             };
         };
+    };
+}
+
+export interface GithubRepositoriesQueryResponse {
+    user: {
+        repositories: GithubRepositoryConnection;
     };
 }

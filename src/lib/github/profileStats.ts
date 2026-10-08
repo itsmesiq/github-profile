@@ -1,6 +1,6 @@
 import { githubGraphql } from '../graphql/client';
-import { GITHUB_PROFILE_QUERY } from '../graphql/queries';
-import type { GithubProfileQueryResponse } from '../graphql/types';
+import { GITHUB_PROFILE_QUERY, GITHUB_REPOSITORIES_QUERY } from '../graphql/queries';
+import type { GithubProfileQueryResponse, GithubRepositoriesQueryResponse } from '../graphql/types';
 import type { GithubLanguages, GithubUser } from './types';
 
 const GITHUB_USERNAME = 'itsmesiq';
@@ -21,9 +21,33 @@ export async function getGithubProfileStats(): Promise<GithubProfileStats> {
     const user = data.user;
     const calendar = user.contributionsCollection.contributionCalendar;
 
+    const repositories = [...user.repositories.nodes];
+    let hasNextPage = user.repositories.pageInfo.hasNextPage;
+    let cursor = user.repositories.pageInfo.endCursor;
+
+    while (hasNextPage) {
+        if (!cursor) {
+            throw new Error('GitHub pagination expected a cursor but none was returned');
+        }
+
+        const nextPage = await githubGraphql<GithubRepositoriesQueryResponse>(
+            GITHUB_REPOSITORIES_QUERY,
+            {
+                login: GITHUB_USERNAME,
+                cursor,
+            },
+        );
+
+        const connection = nextPage.user.repositories;
+
+        repositories.push(...connection.nodes);
+        hasNextPage = connection.pageInfo.hasNextPage;
+        cursor = connection.pageInfo.endCursor;
+    }
+
     const languages: GithubLanguages = {};
 
-    for (const repository of user.repositories.nodes) {
+    for (const repository of repositories) {
         if (repository.isFork) {
             continue;
         }
