@@ -1,8 +1,13 @@
 import Image from 'next/image';
 
 import ProfileImage from '@/assets/images/profile.png';
+import type { GithubProfileData } from '@/lib/github/types';
 
-export function ProfileHero() {
+interface ProfileHeroProps {
+    data: GithubProfileData;
+}
+
+export function ProfileHero({ data }: ProfileHeroProps) {
     return (
         <article className="w-full rounded-2xl border border-primary bg-surface">
             <div className="flex items-center justify-between border-b border-primary px-6 py-4 font-mono text-xs text-primary">
@@ -57,11 +62,34 @@ export function ProfileHero() {
                             ))}
                         </div>
                         <div className="flex flex-col gap-5 whitespace-nowrap">
-                            <span className="pb-[1px]">Ana Siqueira</span>
-                            <span className="pb-[1px]">@itsmesiq</span>
+                            <span className="pb-[1px]">{data.profile.name}</span>
+                            <span className="pb-[1px]">{data.profile.login}</span>
                             <span className="pb-[1px]">Fullstack Developer</span>
                             <span className="pb-[1px]">Building | Learning | Shipping</span>
                             <span className="pb-[1px]">TypeScript | JavaScript | HTML | CSS</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span className="font-mono text-[10px] tracking-[4px] text-primary uppercase">
+                            languages.info
+                        </span>
+                        <div>
+                            {data.languages.map((language) => (
+                                <div
+                                    key={language.name}
+                                    className="flex items-center justify-between gap-2 py-2"
+                                >
+                                    <span>{language.name}</span>
+                                    <div className="relative w-full">
+                                        <div
+                                            className="absolute inset-0 z-10 h-2 bg-primary"
+                                            style={{ width: `${language.percentage}%` }}
+                                        ></div>
+                                        <div className="relative h-2 w-full bg-muted/5"></div>
+                                    </div>
+                                    <span>{language.percentage}%</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                     <div className="flex w-full items-center justify-between gap-15 border-t border-dashed border-primary pt-5">
@@ -73,7 +101,7 @@ export function ProfileHero() {
                                 <div className="size-1 animate-pulse rounded-full bg-primary"></div>
                             </div>
                             <span className="text-3xl font-bold tracking-[4px] text-foreground">
-                                19
+                                {data.profile.public_repos}
                             </span>
                         </div>
                         <div className="w-full">
@@ -84,7 +112,7 @@ export function ProfileHero() {
                                 <div className="size-1 animate-pulse rounded-full bg-primary"></div>
                             </div>
                             <span className="text-3xl font-bold tracking-[4px] text-foreground">
-                                7
+                                {data.pullRequests}
                             </span>
                         </div>
                         <div className="w-full">
@@ -95,7 +123,7 @@ export function ProfileHero() {
                                 <div className="size-1 animate-pulse rounded-full bg-primary"></div>
                             </div>
                             <span className="text-3xl font-bold tracking-[4px] text-foreground">
-                                530
+                                {data.contributions}
                             </span>
                         </div>
                         <div className="w-full">

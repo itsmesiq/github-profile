@@ -12,6 +12,16 @@ export async function githubFetch<T>(endpoint: string): Promise<T> {
     });
 
     if (!response.ok) {
+        const message = await response.text();
+
+        console.error(
+            `GitHub API error | status=${response.status} | message=${message} | remaining=${response.headers.get(
+                'x-ratelimit-remaining',
+            )} | limit=${response.headers.get(
+                'x-ratelimit-limit',
+            )} | reset=${response.headers.get('x-ratelimit-reset')}`,
+        );
+
         throw new Error(`GitHub API request failed with status ${response.status}`);
     }
 

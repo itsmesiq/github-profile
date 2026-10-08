@@ -37,3 +37,10 @@ export interface GithubContributor {
 export interface GithubSearchResult {
     total_count: number;
 }
+
+export interface GithubProfileData {
+    profile: GithubUser;
+    languages: GithubLanguageStat[];
+    pullRequests: number;
+    contributions: number;
+}
