@@ -134,7 +134,7 @@ export function ProfileHero({ data }: ProfileHeroProps) {
                                 <div className="size-1 animate-pulse rounded-full bg-primary"></div>
                             </div>
                             <span className="text-3xl font-bold tracking-[4px] text-foreground">
-                                79
+                                {data.activeDays}
                             </span>
                         </div>
                     </div>

@@ -43,4 +43,5 @@ export interface GithubProfileData {
     languages: GithubLanguageStat[];
     pullRequests: number;
     contributions: number;
+    activeDays: number;
 }
