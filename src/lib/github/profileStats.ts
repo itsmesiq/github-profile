@@ -1,12 +1,13 @@
 import { githubGraphql } from '../graphql/client';
 import { GITHUB_PROFILE_QUERY } from '../graphql/queries';
 import type { GithubProfileQueryResponse } from '../graphql/types';
-import type { GithubUser } from './types';
+import type { GithubLanguages, GithubUser } from './types';
 
 const GITHUB_USERNAME = 'itsmesiq';
 
 export interface GithubProfileStats {
     profile: GithubUser;
+    languages: GithubLanguages;
     pullRequests: number;
     contributions: number;
     activeDays: number;
@@ -17,20 +18,36 @@ export async function getGithubProfileStats(): Promise<GithubProfileStats> {
         login: GITHUB_USERNAME,
     });
 
-    const contributionDays = data.user.contributionsCollection.contributionCalendar.weeks.flatMap(
-        (week) => week.contributionDays,
-    );
+    const user = data.user;
+    const calendar = user.contributionsCollection.contributionCalendar;
+
+    const languages: GithubLanguages = {};
+
+    for (const repository of user.repositories.nodes) {
+        if (repository.isFork) {
+            continue;
+        }
+
+        for (const edge of repository.languages.edges) {
+            const language = edge.node.name;
+
+            languages[language] = (languages[language] ?? 0) + edge.size;
+        }
+    }
+
+    const contributionDays = calendar.weeks.flatMap((week) => week.contributionDays);
 
     const activeDays = contributionDays.filter((day) => day.contributionCount > 0).length;
 
     return {
         profile: {
-            login: data.user.login,
-            name: data.user.name,
-            public_repos: data.user.repositories.totalCount,
+            login: user.login,
+            name: user.name,
+            public_repos: user.repositories.totalCount,
         },
-        pullRequests: data.user.pullRequests.totalCount,
-        contributions: data.user.contributionsCollection.contributionCalendar.totalContributions,
+        languages,
+        pullRequests: user.pullRequests.totalCount,
+        contributions: calendar.totalContributions,
         activeDays,
     };
 }

@@ -4,6 +4,17 @@ export interface GithubProfileQueryResponse {
         login: string;
         repositories: {
             totalCount: number;
+            nodes: Array<{
+                isFork: boolean;
+                languages: {
+                    edges: Array<{
+                        size: number;
+                        node: {
+                            name: string;
+                        };
+                    }>;
+                };
+            }>;
         };
         pullRequests: {
             totalCount: number;

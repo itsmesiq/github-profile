@@ -5,10 +5,24 @@ export const GITHUB_PROFILE_QUERY = `
             login
 
             repositories(
-                first: 1
+                first: 100
                 ownerAffiliations: OWNER
+                privacy: PUBLIC
             ) {
                 totalCount    
+
+                nodes {
+                    isFork
+
+                    languages(first: 10, orderBy: { field: SIZE, direction: DESC }) {
+                        edges {
+                            size
+                            node {
+                                name
+                            }
+                        }
+                    }
+                }
             }
 
             pullRequests(first: 1) {
