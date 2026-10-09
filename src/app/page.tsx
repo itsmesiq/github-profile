@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import { ProfileHero } from '@/components/widgets/profile-hero/ProfileHero';
 import { getGithubProfileData } from '@/lib/github/data';
 
@@ -9,15 +11,27 @@ interface HomeProps {
     }>;
 }
 
-export default async function Home({ searchParams }: HomeProps) {
+async function ProfileContent({ searchParams }: HomeProps) {
     const { username } = await searchParams;
     const githubUsername = username?.trim() || DEFAULT_GITHUB_USERNAME;
 
     const githubData = await getGithubProfileData(githubUsername);
 
+    return <ProfileHero data={githubData} />;
+}
+
+export default function Home({ searchParams }: HomeProps) {
     return (
-        <main className="h-dvh w-dvw bg-background px-16 py-16">
-            <ProfileHero data={githubData} />
+        <main>
+            <Suspense
+                fallback={
+                    <div className="flex items-center gap-3 text-sm text-muted">
+                        <span>Loading...</span>
+                    </div>
+                }
+            >
+                <ProfileContent searchParams={searchParams} />
+            </Suspense>
         </main>
     );
 }
