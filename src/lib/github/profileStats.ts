@@ -3,8 +3,6 @@ import { GITHUB_PROFILE_QUERY, GITHUB_REPOSITORIES_QUERY } from '../graphql/quer
 import type { GithubProfileQueryResponse, GithubRepositoriesQueryResponse } from '../graphql/types';
 import type { GithubLanguages, GithubUser } from './types';
 
-const GITHUB_USERNAME = 'itsmesiq';
-
 export interface GithubProfileStats {
     profile: GithubUser;
     languages: GithubLanguages;
@@ -29,7 +27,7 @@ export async function getGithubProfileStats(username: string): Promise<GithubPro
     const githubUsername = validateGithubUsername(username);
 
     const data = await githubGraphql<GithubProfileQueryResponse>(GITHUB_PROFILE_QUERY, {
-        login: GITHUB_USERNAME,
+        login: githubUsername,
     });
 
     if (!data.user) {
@@ -51,7 +49,7 @@ export async function getGithubProfileStats(username: string): Promise<GithubPro
         const nextPage = await githubGraphql<GithubRepositoriesQueryResponse>(
             GITHUB_REPOSITORIES_QUERY,
             {
-                login: GITHUB_USERNAME,
+                login: githubUsername,
                 cursor,
             },
         );
