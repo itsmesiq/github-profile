@@ -51,10 +51,9 @@ export function ProfileHero({ data }: ProfileHeroProps) {
                             <span className="pb-[1px]">Handle</span>
                             <span className="pb-[1px]">Role</span>
                             <span className="pb-[1px]">Status</span>
-                            <span className="pb-[1px]">Languages</span>
                         </div>
                         <div className="flex w-full flex-col gap-5">
-                            {Array.from({ length: 5 }).map((_, index) => (
+                            {Array.from({ length: 4 }).map((_, index) => (
                                 <div
                                     key={index}
                                     className="my-2 h-[1px] w-full border border-dashed border-primary"
@@ -66,20 +65,19 @@ export function ProfileHero({ data }: ProfileHeroProps) {
                             <span className="pb-[1px]">{data.profile.login}</span>
                             <span className="pb-[1px]">Fullstack Developer</span>
                             <span className="pb-[1px]">Building | Learning | Shipping</span>
-                            <span className="pb-[1px]">TypeScript | JavaScript | HTML | CSS</span>
                         </div>
                     </div>
-                    <div>
+                    <div className="flex flex-col gap-4">
                         <span className="font-mono text-[10px] tracking-[4px] text-primary uppercase">
                             languages.info
                         </span>
-                        <div>
+                        <div className="flex w-full flex-col items-center gap-4 font-mono text-xs text-primary">
                             {data.languages.map((language) => (
                                 <div
                                     key={language.name}
-                                    className="flex items-center justify-between gap-2 py-2"
+                                    className="flex w-full items-center justify-between gap-5"
                                 >
-                                    <span>{language.name}</span>
+                                    <span className="min-w-[80px]">{language.name}</span>
                                     <div className="relative w-full">
                                         <div
                                             className="absolute inset-0 z-10 h-2 bg-primary"
