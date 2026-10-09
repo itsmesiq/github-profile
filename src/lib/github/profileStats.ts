@@ -13,10 +13,28 @@ export interface GithubProfileStats {
     activeDays: number;
 }
 
-export async function getGithubProfileStats(): Promise<GithubProfileStats> {
+function validateGithubUsername(username: string): string {
+    const normalizedUsername = username.trim();
+
+    const isValid = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i.test(normalizedUsername);
+
+    if (!isValid) {
+        throw new Error('Invalid GitHub username');
+    }
+
+    return normalizedUsername;
+}
+
+export async function getGithubProfileStats(username: string): Promise<GithubProfileStats> {
+    const githubUsername = validateGithubUsername(username);
+
     const data = await githubGraphql<GithubProfileQueryResponse>(GITHUB_PROFILE_QUERY, {
         login: GITHUB_USERNAME,
     });
+
+    if (!data.user) {
+        throw new Error(`GitHub profile "${githubUsername}" not found`);
+    }
 
     const user = data.user;
     const calendar = user.contributionsCollection.contributionCalendar;
@@ -37,6 +55,10 @@ export async function getGithubProfileStats(): Promise<GithubProfileStats> {
                 cursor,
             },
         );
+
+        if (!nextPage.user) {
+            throw new Error(`GitHub profile "${githubUsername}" not found`);
+        }
 
         const connection = nextPage.user.repositories;
 

@@ -39,11 +39,11 @@ export interface GithubProfileQueryResponse {
                 }>;
             };
         };
-    };
+    } | null;
 }
 
 export interface GithubRepositoriesQueryResponse {
     user: {
         repositories: GithubRepositoryConnection;
-    };
+    } | null;
 }
