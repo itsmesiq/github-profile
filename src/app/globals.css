@@ -22,7 +22,8 @@
     --color-tertiary: var(--tertiary);
 
     --font-sans: var(--font-inter);
-    --font-mono: var(--font-jetbrains-mono);
+    --font-consolas: Consolas, var(--font-jetbrains-mono), monospace;
+    --font-jetbrains: var(--font-jetbrains-mono);
 }
 
 * {
