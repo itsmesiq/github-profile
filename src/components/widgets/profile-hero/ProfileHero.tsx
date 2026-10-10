@@ -1,6 +1,5 @@
 import Image from 'next/image';
 
-import ProfileImage from '@/assets/images/profile.png';
 import type { GithubProfileData } from '@/lib/github/types';
 
 interface ProfileHeroProps {
@@ -28,7 +27,7 @@ export function ProfileHero({ data }: ProfileHeroProps) {
                         visual.map
                     </span>
                     <Image
-                        src={ProfileImage}
+                        src="/images/profile.png"
                         alt="Profile"
                         width={463}
                         height={515}
