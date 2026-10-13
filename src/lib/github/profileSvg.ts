@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import type { GithubProfileData } from './types';
+import type { GithubLanguageStat, GithubProfileData } from './types';
 
-const SVG_WIDTH = 1920;
-const SVG_HEIGHT = 700;
+const SVG_WIDTH = 1940;
+const SVG_HEIGHT = 800;
 
 const COLORS = {
     background: '#08080b',
@@ -15,7 +15,23 @@ const COLORS = {
     primary: '#3df2bc',
     secondary: '#ff2d78',
     tertiary: '#c4b5fd',
+    blue: '#47cbff',
 };
+
+const LAYOUT = {
+    outer: { x: 10, y: 10, width: 1900, height: 768 },
+    headerHeight: 62,
+    portrait: { x: 41, y: 102, width: 644, height: 644 },
+    info: { x: 715, y: 102, width: 1164, height: 644 },
+};
+
+const LANGUAGE_COLORS = [
+    COLORS.primary,
+    COLORS.secondary,
+    COLORS.blue,
+    COLORS.tertiary,
+    COLORS.muted,
+];
 
 function escapeXml(value: string): string {
     return value
@@ -47,11 +63,11 @@ function createText(
     } = {},
 ): string {
     const {
-        size = 18,
-        color = COLORS.foreground,
+        size = 14,
+        color = COLORS.primary,
         weight = 400,
         anchor = 'start',
-        letterSpacing = 0,
+        letterSpacing = 1,
     } = options;
 
     return `
@@ -59,7 +75,7 @@ function createText(
             x="${x}"
             y="${y}"
             fill="${color}"
-            font-family="monospace"
+            font-family="Consolas, monospace"
             font-size="${size}"
             font-weight="${weight}"
             text-anchor="${anchor}"
@@ -68,416 +84,482 @@ function createText(
     `;
 }
 
-function createLanguageBars(data: GithubProfileData): string {
-    const languages = data.languages.slice(0, 5);
+function createDashedLine(x1: number, y: number, x2: number): string {
+    return `
+        <line
+            x1="${x1}"
+            y1="${y}"
+            x2="${x2}"
+            y2="${y}"
+            stroke="${COLORS.primary}"
+            stroke-width="1"
+            stroke-dasharray="1 8"
+            stroke-linecap="round"
+        />
+    `;
+}
+
+function createInfoRow(
+    label: string,
+    value: string,
+    y: number,
+    options: { status?: boolean } = {},
+): string {
+    const labelX = 745;
+    const valueX = 1612;
+    const leaderStartX = 850;
+    const leaderEndX = 1575;
+
+    return `
+        ${createText(labelX, y, label, {
+            size: 16,
+        })}
+
+        ${createDashedLine(leaderStartX, y - 5, leaderEndX)}
+
+        ${
+            options.status
+                ? `
+                    <circle
+                        cx="${valueX}"
+                        cy="${y - 5}"
+                        r="5"
+                        fill="${COLORS.primary}"
+                    >
+                        <animate
+                            attributeName="opacity"
+                            values="1;0.35;1"
+                            dur="2s"
+                            repeatCount="indefinite"
+                        />
+                    </circle>
+
+                    ${createText(valueX + 18, y, value, {
+                        size: 16,
+                    })}
+                `
+                : createText(valueX, y, value, {
+                      size: 16,
+                  })
+        }
+    `;
+}
+
+function createLanguageRow(
+    language: GithubLanguageStat,
+    index: number,
+    x: number,
+    y: number,
+): string {
+    const labelWidth = 120;
+    const barX = x + labelWidth + 20;
+    const barWidth = 338;
+    const percentageX = barX + barWidth + 62;
+    const barHeight = 9;
+
+    const percentage = Math.max(0, Math.min(100, language.percentage));
+
+    const color = LANGUAGE_COLORS[index % LANGUAGE_COLORS.length];
+    const filledWidth = (barWidth * percentage) / 100;
+
+    return `
+        <g>
+            ${createText(x, y, language.name, {
+                size: 16,
+            })}
+
+            <rect
+                x="${barX}"
+                y="${y - 8}"
+                width="${barWidth}"
+                height="${barHeight}"
+                rx="4.5"
+                fill="${COLORS.stroke}"
+            />
+
+            <rect
+                x="${barX}"
+                y="${y - 8}"
+                width="${filledWidth}"
+                height="${barHeight}"
+                rx="4.5"
+                fill="${color}"
+            />
+
+            ${createText(percentageX, y, `${percentage}%`, {
+                size: 16,
+                anchor: 'end',
+            })}
+        </g>
+    `;
+}
+
+function createLanguages(data: GithubProfileData): string {
+    const languages = [...data.languages].sort((a, b) => b.percentage - a.percentage).slice(0, 5);
 
     if (languages.length === 0) {
-        return createText(0, 0, 'No language available.', {
-            size: 11,
+        return createText(745, 442, 'No languages available', {
+            size: 14,
             color: COLORS.muted,
         });
     }
 
-    const barWidth = 430;
-    const barWeight = 8;
-    const rowHeight = 57;
+    const middleIndex = Math.ceil(languages.length / 2);
 
-    return languages
-        .map((language, index) => {
-            const y = index * rowHeight;
-            const percentage = Math.max(0, Math.min(100, language.percentage));
-            const width = (barWidth * percentage) / 100;
+    const leftLanguages = languages.slice(0, middleIndex);
+    const rightLanguages = languages.slice(middleIndex);
 
-            const color =
-                index === 0
-                    ? COLORS.primary
-                    : index === 1
-                      ? COLORS.secondary
-                      : index === 2
-                        ? COLORS.tertiary
-                        : '#777784';
+    const rowPositions = [442, 492, 542];
 
-            return `
-            <g transform="translate(0, ${y})">
-                ${createText(0, 18, language.name, {
-                    size: 16,
-                    color: COLORS.foreground,
-                })}
-
-                ${createText(barWidth, 18, `${percentage}%`, {
-                    size: 15,
-                    color: COLORS.muted,
-                    anchor: 'end',
-                })}
-
-                <rect
-                    x="0"
-                    y="30"
-                    width="${barWidth}"
-                    height="${barWeight}"
-                    rx="2"
-                    fill="${COLORS.stroke}"
-                />
-
-                <rect
-                    x="0"
-                    y="30"
-                    width="${width}"
-                    height="${barWeight}"
-                    rx="2"
-                    fill="${color}"
-                />
-            </g>
-        `;
-        })
+    const leftColumn = leftLanguages
+        .map((language, index) => createLanguageRow(language, index, 745, rowPositions[index]))
         .join('');
+
+    const rightColumn = rightLanguages
+        .map((language, index) =>
+            createLanguageRow(language, middleIndex + index, 1318, rowPositions[index]),
+        )
+        .join('');
+
+    return leftColumn + rightColumn;
 }
 
-function createStatCard(
-    x: number,
-    y: number,
-    width: number,
-    label: string,
-    value: number,
-    accent: string,
-): string {
+function createStatCard(x: number, label: string, value: number, width: number): string {
     return `
-        <g transform="translate(${x}, ${y})">
+        <g>
             <rect
+                x="${x}"
+                y="600"
                 width="${width}"
-                height="100"
-                rx="4"
+                height="115"
                 fill="${COLORS.background}"
-                stroke="${COLORS.stroke}"
             />
 
             <rect
+                x="${x}"
+                y="600"
                 width="3"
-                height="100"
-                fill="${accent}"
+                height="115"
+                fill="${COLORS.primary}"
             />
 
-            ${createText(20, 32, label.toUpperCase(), {
-                size: 13,
-                color: COLORS.muted,
-                letterSpacing: 1,
+            ${createText(x + 28, 635, label.toUpperCase(), {
+                size: 12,
+                letterSpacing: 2,
             })}
 
-            ${createText(20, 73, value.toLocaleString('en-US'), {
-                size: 31,
+            <circle
+                cx="${x + width - 28}"
+                cy="630"
+                r="2.5"
+                fill="${COLORS.primary}"
+            >
+                <animate
+                    attributeName="opacity"
+                    values="1;0.35;1"
+                    dur="2s"
+                    repeatCount="indefinite"
+                />
+            </circle>
+
+            ${createText(x + 28, 686, value.toLocaleString('en-US'), {
+                size: 39,
                 color: COLORS.foreground,
                 weight: 700,
+                letterSpacing: 4,
             })}
         </g>
     `;
+}
+
+function createStats(data: GithubProfileData): string {
+    const stats = [
+        {
+            label: 'Repositories',
+            value: data.profile.public_repos,
+        },
+        {
+            label: 'Pull Requests',
+            value: data.pullRequests,
+        },
+        {
+            label: 'Contributions',
+            value: data.contributions,
+        },
+        {
+            label: 'Active Days',
+            value: data.activeDays,
+        },
+    ];
+
+    const startX = 746;
+    const cardWidth = 253;
+    const gap = 30;
+
+    return stats
+        .map((stat, index) =>
+            createStatCard(startX + index * (cardWidth + gap), stat.label, stat.value, cardWidth),
+        )
+        .join('');
 }
 
 export async function generateProfileSvg(data: GithubProfileData): Promise<string> {
     const imagePath = join(process.cwd(), 'public', 'images', 'profile.png');
 
     const imageBuffer = await readFile(imagePath);
-    const imageBase64 = imageBuffer.toString('base64');
-    const imageDataUri = `data:image/png;base64,${imageBase64}`;
 
-    const displayName = truncate(data.profile.name?.trim() || data.profile.login, 28);
+    const imageDataUri = `data:image/png;base64,${imageBuffer.toString('base64')}`;
+
+    const displayName = truncate(data.profile.name?.trim() || data.profile.login, 40);
 
     const username = truncate(data.profile.login, 30);
 
-    const leftX = 32;
-    const topY = 28;
-    const panelWidth = SVG_WIDTH - 64;
-    const panelHeight = SVG_HEIGHT - 56;
+    const { outer, headerHeight, portrait, info } = LAYOUT;
 
-    const headerHeight = 56;
-    const contentY = topY + headerHeight;
-    const contentHeight = panelHeight - headerHeight;
+    const languages = createLanguages(data);
+    const stats = createStats(data);
 
-    const leftPanelWidth = 640;
-    const rightPanelX = leftX + leftPanelWidth;
-    const rightPanelWidth = panelWidth - leftPanelWidth;
-
-    const statsY = contentHeight - 124;
-    const statGap = 16;
-    const statWidth = (rightPanelWidth - 64 - statGap * 3) / 4;
-    const statX = rightPanelX + 32;
-
-    const stats = [
-        {
-            label: 'Repositories',
-            value: data.profile.public_repos,
-            color: COLORS.primary,
-        },
-        {
-            label: 'Pull requests',
-            value: data.pullRequests,
-            color: COLORS.primary,
-        },
-        {
-            label: 'Contributions',
-            value: data.contributions,
-            color: COLORS.primary,
-        },
-        {
-            label: 'Active days',
-            value: data.activeDays,
-            color: COLORS.primary,
-        },
-    ];
-
-    const statCards = stats
-        .map((stat, index) =>
-            createStatCard(
-                statX + index * (statWidth + statGap),
-                contentY + statsY,
-                statWidth,
-                stat.label,
-                stat.value,
-                stat.color,
-            ),
-        )
-        .join('');
-
-    const languagesY = contentY + 275;
-    const languageBars = createLanguageBars(data);
+    const infoRows = [
+        createInfoRow('Subject', displayName, 181),
+        createInfoRow('Handle', username, 231),
+        createInfoRow('Role', 'Fullstack Developer', 281),
+        createInfoRow('Status', 'Available', 331, { status: true }),
+    ].join('');
 
     return `
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink"
-            width="${SVG_WIDTH}"
-            height="${SVG_HEIGHT}"
-            viewBox="0 0 ${SVG_WIDTH} ${SVG_HEIGHT}"
-            role="img"
-            aria-labelledby="widget-title widget-description"
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="100%"
+    height="auto"
+    viewBox="0 0 ${SVG_WIDTH} ${SVG_HEIGHT}"
+    preserveAspectRatio="xMidYMid meet"
+    style="display: block; max-width: 100%; height: auto;"
+    role="img"
+    aria-labelledby="widget-title widget-description"
+>
+    <title id="widget-title">GitHub profile: ${escapeXml(username)}</title>
+
+    <desc id="widget-description">
+        GitHub profile with portrait, profile information,
+        programming language statistics and contribution metrics.
+    </desc>
+
+    <defs>
+        <clipPath id="portrait-clip">
+            <rect
+                x="${portrait.x}"
+                y="${portrait.y}"
+                width="${portrait.width}"
+                height="${portrait.height}"
+                rx="20"
+            />
+        </clipPath>
+
+        <linearGradient
+            id="scanline-gradient"
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
         >
-            <title id="widget-title">GitHub Profile: ${escapeXml(username)}</title>
-            <desc id="widget-description">
-                 GitHub profile widget with profile image, programming languages, repository statistics and an animated scanline.
-            </desc>
+            <stop
+                offset="0%"
+                stop-color="${COLORS.primary}"
+                stop-opacity="0"
+            />
+            <stop
+                offset="50%"
+                stop-color="${COLORS.primary}"
+                stop-opacity="0.16"
+            />
+            <stop
+                offset="100%"
+                stop-color="${COLORS.primary}"
+                stop-opacity="0"
+            />
+        </linearGradient>
 
-            <defs>
-                <clipPath id="portrait-clip">
-                    <rect
-                        x="${leftX + 1}"
-                        y="${contentY + 1}"
-                        width="${leftPanelWidth - 2}"
-                        height="${contentHeight - 2}"
-                    />
-                </clipPath>
+        <filter
+            id="scanline-glow"
+            x="-20%"
+            y="-100%"
+            width="140%"
+            height="300%"
+        >
+            <feGaussianBlur stdDeviation="5" />
+        </filter>
+    </defs>
 
-                <clipPath id="image-clip">
-                    <rect
-                        x="${leftX + 20}"
-                        y="${contentY + 60}"
-                        width="${leftPanelWidth - 40}"
-                        height="${contentHeight - 90}"
-                    />
-                </clipPath>
+    <!-- Fundo preto cobrindo toda a área, inclusive o padding -->
+    <rect
+        x="0"
+        y="0"
+        width="${SVG_WIDTH}"
+        height="${SVG_HEIGHT}"
+        fill="${COLORS.background}"
+    />
 
-                <linearGradient id="scanline-gradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="${COLORS.primary}" stop-opacity="0"/>
-                    <stop offset="50%" stop-color="${COLORS.primary}" stop-opacity="0.4"/>
-                    <stop offset="100%" stop-color="${COLORS.primary}" stop-opacity="0"/>
-                </linearGradient>
+    <!--
+        O desenho original mede 1920 x 780.
+        O grupo inteiro é centralizado dentro do SVG de 1940 x 800.
+        O deslocamento é calculado para deixar margens iguais:
+        20 unidades nas laterais e 16 unidades em cima e embaixo.
+    -->
+    <g transform="translate(39 16) scale(0.97)">
 
-                <filter id="soft-glow" x="-30%" y="-30%" width="160%" height="160%">
-                    <feGaussianBlur stdDeviation="3" result="blur"/>
-                    <feMerge>
-                        <feMergeNode in="blur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                </filter>  
-            </defs>
-            <rect
-                width="${SVG_WIDTH}"
-                height="${SVG_HEIGHT}"
-                fill="${COLORS.background}"
+        <!-- Cabeçalho -->
+        <path
+            d="
+                M ${outer.x + 20} ${outer.y}
+                H ${outer.x + outer.width - 20}
+                Q ${outer.x + outer.width} ${outer.y}
+                  ${outer.x + outer.width} ${outer.y + 20}
+                V ${outer.y + headerHeight}
+                H ${outer.x}
+                V ${outer.y + 20}
+                Q ${outer.x} ${outer.y} ${outer.x + 20} ${outer.y}
+                Z
+            "
+            fill="${COLORS.surface}"
+        />
+
+        <!-- Moldura externa -->
+        <rect
+            x="${outer.x}"
+            y="${outer.y}"
+            width="${outer.width}"
+            height="${outer.height}"
+            rx="20"
+            fill="${COLORS.surface}"
+            stroke="${COLORS.primary}"
+            stroke-width="1"
+        />
+
+        <circle cx="48" cy="41" r="7.5" fill="#e01f43" />
+        <circle cx="74" cy="41" r="7.5" fill="#f2aa3d" />
+        <circle cx="98" cy="41" r="7.5" fill="#3df255" />
+
+        ${createText(SVG_WIDTH / 2, 46, 'itsmesiq@github.exe', {
+            size: 14,
+            color: COLORS.primary,
+            anchor: 'middle',
+            letterSpacing: 1.5,
+        })}
+
+        <circle
+            cx="1816"
+            cy="41"
+            r="5"
+            fill="${COLORS.primary}"
+        />
+
+        ${createText(1830, 46, 'LIVE', {
+            size: 14,
+            letterSpacing: 3,
+        })}
+
+        <line
+            x1="${outer.x}"
+            y1="${outer.y + headerHeight}"
+            x2="${outer.x + outer.width}"
+            y2="${outer.y + headerHeight}"
+            stroke="${COLORS.primary}"
+            stroke-width="1"
+        />
+
+        <!-- Painel de identidade -->
+        <rect
+            x="${portrait.x}"
+            y="${portrait.y}"
+            width="${portrait.width}"
+            height="${portrait.height}"
+            rx="20"
+            fill="${COLORS.surface}"
+            stroke="${COLORS.primary}"
+            stroke-width="1"
+        />
+
+        <g clip-path="url(#portrait-clip)">
+            <image
+                x="${portrait.x}"
+                y="${portrait.y}"
+                width="${portrait.width}"
+                height="${portrait.height}"
+                preserveAspectRatio="xMidYMid meet"
+                href="${imageDataUri}"
             />
 
-            <!-- Outer terminal frame -->
-            <rect
-                x="${leftX}"
-                y="${topY}"
-                width="${panelWidth}"
-                height="${panelHeight}"
-                rx="5"
-                fill="${COLORS.surface}"
-                stroke="${COLORS.primary}"
-                stroke-width="1.5"
-            />
-
-            <!-- Terminal header -->
-            <path
-                d="
-                    M ${leftX + 5} ${topY}
-                    H ${leftX + panelWidth - 5}
-                    Q ${leftX + panelWidth} ${topY} ${leftX + panelWidth} ${topY + 5}
-                    V ${topY + headerHeight}
-                    H ${leftX}
-                    V ${topY + 5}
-                    Q ${leftX} ${topY} ${leftX + 5} ${topY}
-                    Z
-                "
-                fill="${COLORS.background}"
-            />
-
-            <circle cx="${leftX + 24}" cy="${topY + 28}" r="6" fill="${COLORS.secondary}"/>
-            <circle cx="${leftX + 44}" cy="${topY + 28}" r="6" fill="${COLORS.tertiary}"/>
-            <circle cx="${leftX + 64}" cy="${topY + 28}" r="6" fill="${COLORS.primary}"/>
-
-            ${createText(leftX + 92, topY + 34, 'GITHUB_PROFILE.exe', {
-                size: 17,
-                color: COLORS.foreground,
-                weight: 700,
-                letterSpacing: 1,
-            })}
-        
-            ${createText(leftX + panelWidth - 26, topY + 34, 'SYSTEM ONLINE', {
-                size: 13,
+            ${createText(portrait.x + 26, portrait.y + 29, '// IDENTITY_MODULE', {
+                size: 12,
                 color: COLORS.primary,
-                anchor: 'end',
                 letterSpacing: 1,
             })}
-        
-            <line
-                x1="${leftX}"
-                y1="${contentY}"
-                x2="${leftX + panelWidth}"
-                y2="${contentY}"
-                stroke="${COLORS.primary}"
-                stroke-opacity="0.6"
-            />
-        
-            <!-- Left portrait panel -->
-            <g clip-path="url(#portrait-clip)">
-                <rect
-                    x="${leftX}"
-                    y="${contentY}"
-                    width="${leftPanelWidth}"
-                    height="${contentHeight}"
-                    fill="${COLORS.surface}"
+
+            <!-- Scanline animada -->
+            <rect
+                x="${portrait.x}"
+                y="${portrait.y}"
+                width="${portrait.width}"
+                height="60"
+                fill="url(#scanline-gradient)"
+                filter="url(#scanline-glow)"
+                pointer-events="none"
+            >
+                <animate
+                    attributeName="y"
+                    values="${portrait.y};${portrait.y + portrait.height - 60};${portrait.y}"
+                    dur="5s"
+                    repeatCount="indefinite"
                 />
-        
-                ${createText(leftX + 26, contentY + 35, '// IDENTITY_MODULE', {
-                    size: 13,
-                    color: COLORS.primary,
-                    letterSpacing: 1,
-                })}
-            
-                <image
-                    x="${leftX + 20}"
-                    y="${contentY + 60}"
-                    width="${leftPanelWidth - 40}"
-                    height="${contentHeight - 90}"
-                    preserveAspectRatio="xMidYMid meet"
-                    clip-path="url(#image-clip)"
-                    href="${imageDataUri}"
-                    xlink:href="${imageDataUri}"
+            </rect>
+
+            <rect
+                x="${portrait.x}"
+                y="${portrait.y}"
+                width="${portrait.width}"
+                height="2"
+                fill="${COLORS.primary}"
+                opacity="0.3"
+            >
+                <animate
+                    attributeName="y"
+                    values="${portrait.y};${portrait.y + portrait.height - 2};${portrait.y}"
+                    dur="5s"
+                    repeatCount="indefinite"
                 />
-            
-                <!-- Animated scanline -->
-                <rect
-                    x="${leftX + 20}"
-                    y="${contentY + 60}"
-                    width="${leftPanelWidth - 40}"
-                    height="18"
-                    fill="url(#scanline-gradient)"
-                    filter="url(#soft-glow)"
-                    pointer-events="none"
-                >
-                    <animate
-                        attributeName="y"
-                        values="${contentY + 60};${contentY + contentHeight - 30};${contentY + 60}"
-                        dur="5s"
-                        repeatCount="indefinite"
-                    />
-                </rect>
-            
-                <line
-                    x1="${leftX + 26}"
-                    y1="${contentY + contentHeight - 30}"
-                    x2="${leftX + leftPanelWidth - 26}"
-                    y2="${contentY + contentHeight - 30}"
-                    stroke="${COLORS.primary}"
-                    stroke-opacity="0.5"
-                />
-            
-                ${createText(leftX + 26, contentY + contentHeight - 10, 'IDENTITY VERIFIED', {
-                    size: 12,
-                    color: COLORS.primary,
-                    letterSpacing: 1,
-                })}
-            </g>
-            
-            <line
-                x1="${rightPanelX}"
-                y1="${contentY}"
-                x2="${rightPanelX}"
-                y2="${contentY + contentHeight}"
-                stroke="${COLORS.primary}"
-                stroke-opacity="0.6"
-            />
-            
-            <!-- Right profile panel -->
-            <g>
-                ${createText(rightPanelX + 32, contentY + 36, 'SUBJECT', {
-                    size: 12,
-                    color: COLORS.muted,
-                    letterSpacing: 2,
-                })}
-            
-                ${createText(rightPanelX + 32, contentY + 76, displayName, {
-                    size: 32,
-                    color: COLORS.foreground,
-                    weight: 700,
-                })}
-            
-                ${createText(rightPanelX + 32, contentY + 108, `@${username}`, {
-                    size: 16,
-                    color: COLORS.primary,
-                })}
-            
-                ${createText(rightPanelX + 32, contentY + 154, 'ROLE', {
-                    size: 12,
-                    color: COLORS.muted,
-                    letterSpacing: 2,
-                })}
-            
-                ${createText(rightPanelX + 32, contentY + 179, 'UI/UX DESIGNER  /  DEVELOPER', {
-                    size: 16,
-                    color: COLORS.foreground,
-                })}
-            
-                ${createText(rightPanelX + 32, contentY + 220, 'STATUS', {
-                    size: 12,
-                    color: COLORS.muted,
-                    letterSpacing: 2,
-                })}
-            
-                <circle
-                    cx="${rightPanelX + 38}"
-                    cy="${contentY + 245}"
-                    r="5"
-                    fill="${COLORS.primary}"
-                />
-            
-                ${createText(rightPanelX + 54, contentY + 251, 'AVAILABLE / ONLINE', {
-                    size: 14,
-                    color: COLORS.primary,
-                })}
-            
-                ${createText(rightPanelX + 32, languagesY - 18, 'LANGUAGE DISTRIBUTION', {
-                    size: 13,
-                    color: COLORS.primary,
-                    letterSpacing: 1.5,
-                })}
-            
-                <g transform="translate(${rightPanelX + 32} ${languagesY})">
-                    ${languageBars}
-                </g>
-            
-                ${statCards}
-            </g>
-        </svg>
+            </rect>
+        </g>
+
+        <!-- Painel de informações -->
+        <rect
+            x="${info.x}"
+            y="${info.y}"
+            width="${info.width}"
+            height="${info.height}"
+            rx="20"
+            fill="${COLORS.surface}"
+            stroke="${COLORS.primary}"
+            stroke-width="1"
+        />
+
+        ${createText(info.x + 30, info.y + 29, '// SYSTEM_INFO', {
+            size: 12,
+            color: COLORS.primary,
+            letterSpacing: 1,
+        })}
+
+        ${infoRows}
+
+        ${createText(745, 405, '// LANGUAGES_MODULE', {
+            size: 12,
+            color: COLORS.primary,
+            letterSpacing: 1,
+        })}
+
+        ${languages}
+
+        ${stats}
+    </g>
+</svg>
     `.trim();
 }
