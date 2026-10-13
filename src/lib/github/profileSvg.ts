@@ -368,9 +368,19 @@ export async function generateProfileSvg(data: GithubProfileData): Promise<strin
                 stop-opacity="0"
             />
             <stop
+                offset="20%"
+                stop-color="${COLORS.primary}"
+                stop-opacity="0.02"
+            />
+            <stop
                 offset="50%"
                 stop-color="${COLORS.primary}"
                 stop-opacity="0.16"
+            />
+            <stop
+                offset="80%"
+                stop-color="${COLORS.primary}"
+                stop-opacity="0.02"
             />
             <stop
                 offset="100%"
@@ -495,39 +505,39 @@ export async function generateProfileSvg(data: GithubProfileData): Promise<strin
                 letterSpacing: 1,
             })}
 
-            <!-- Scanline animada -->
-            <rect
-                x="${portrait.x}"
-                y="${portrait.y}"
-                width="${portrait.width}"
-                height="60"
-                fill="url(#scanline-gradient)"
-                filter="url(#scanline-glow)"
-                pointer-events="none"
-            >
-                <animate
-                    attributeName="y"
-                    values="${portrait.y};${portrait.y + portrait.height - 60};${portrait.y}"
-                    dur="5s"
-                    repeatCount="indefinite"
-                />
-            </rect>
-
-            <rect
-                x="${portrait.x}"
-                y="${portrait.y}"
-                width="${portrait.width}"
-                height="2"
-                fill="${COLORS.primary}"
-                opacity="0.3"
-            >
-                <animate
-                    attributeName="y"
-                    values="${portrait.y};${portrait.y + portrait.height - 2};${portrait.y}"
-                    dur="5s"
-                    repeatCount="indefinite"
-                />
-            </rect>
+            <!-- Scanline: glow e linha fina se movem juntos -->
+            <g pointer-events="none">
+                <g>
+                    <rect
+                        x="${portrait.x}"
+                        y="${portrait.y}"
+                        width="${portrait.width}"
+                        height="60"
+                        fill="url(#scanline-gradient)"
+                    />
+                    
+                    <line
+                        x1="${portrait.x}"
+                        y1="${portrait.y + 30}"
+                        x2="${portrait.x + portrait.width}"
+                        y2="${portrait.y + 30}"
+                        stroke="${COLORS.primary}"
+                        stroke-width="2"
+                        stroke-opacity="0.3"
+                    />
+                    
+                    <animateTransform
+                        attributeName="transform"
+                        type="translate"
+                        values="0 0; 0 ${portrait.height - 60}; 0 0"
+                        keyTimes="0;0.5;1"
+                        calcMode="spline"
+                        keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+                        dur="5s"
+                        repeatCount="indefinite"
+                    />
+                </g>
+            </g>
         </g>
 
         <!-- Painel de informações -->
