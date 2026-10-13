@@ -112,7 +112,7 @@ function createInfoRow(
 
     return `
         ${createText(labelX, y, label, {
-            size: 16,
+            size: 18,
         })}
 
         ${createDashedLine(leaderStartX, y - 5, leaderEndX)}
@@ -135,11 +135,11 @@ function createInfoRow(
                     </circle>
 
                     ${createText(valueX + 18, y, value, {
-                        size: 16,
+                        size: 18,
                     })}
                 `
                 : createText(valueX, y, value, {
-                      size: 16,
+                      size: 18,
                   })
         }
     `;
@@ -165,7 +165,7 @@ function createLanguageRow(
     return `
         <g>
             ${createText(x, y, language.name, {
-                size: 16,
+                size: 18,
             })}
 
             <rect
@@ -187,7 +187,7 @@ function createLanguageRow(
             />
 
             ${createText(percentageX, y, `${percentage}%`, {
-                size: 16,
+                size: 18,
                 anchor: 'end',
             })}
         </g>
@@ -199,7 +199,7 @@ function createLanguages(data: GithubProfileData): string {
 
     if (languages.length === 0) {
         return createText(745, 442, 'No languages available', {
-            size: 14,
+            size: 16,
             color: COLORS.muted,
         });
     }
@@ -209,7 +209,7 @@ function createLanguages(data: GithubProfileData): string {
     const leftLanguages = languages.slice(0, middleIndex);
     const rightLanguages = languages.slice(middleIndex);
 
-    const rowPositions = [442, 492, 542];
+    const rowPositions = [455, 505, 555];
 
     const leftColumn = leftLanguages
         .map((language, index) => createLanguageRow(language, index, 745, rowPositions[index]))
@@ -244,7 +244,7 @@ function createStatCard(x: number, label: string, value: number, width: number):
             />
 
             ${createText(x + 28, 635, label.toUpperCase(), {
-                size: 12,
+                size: 16,
                 letterSpacing: 2,
             })}
 
@@ -400,22 +400,7 @@ export async function generateProfileSvg(data: GithubProfileData): Promise<strin
         </filter>
     </defs>
 
-    <!-- Fundo preto cobrindo toda a área, inclusive o padding -->
-    <rect
-        x="0"
-        y="0"
-        width="${SVG_WIDTH}"
-        height="${SVG_HEIGHT}"
-        fill="${COLORS.background}"
-    />
-
-    <!--
-        O desenho original mede 1920 x 780.
-        O grupo inteiro é centralizado dentro do SVG de 1940 x 800.
-        O deslocamento é calculado para deixar margens iguais:
-        20 unidades nas laterais e 16 unidades em cima e embaixo.
-    -->
-    <g transform="translate(39 16) scale(0.97)">
+    <g transform="translate(12 10)">
 
         <!-- Cabeçalho -->
         <path
@@ -450,10 +435,10 @@ export async function generateProfileSvg(data: GithubProfileData): Promise<strin
         <circle cx="98" cy="41" r="7.5" fill="#3df255" />
 
         ${createText(SVG_WIDTH / 2, 46, 'itsmesiq@github.exe', {
-            size: 14,
+            size: 16,
             color: COLORS.primary,
             anchor: 'middle',
-            letterSpacing: 1.5,
+            letterSpacing: 2,
         })}
 
         <circle
@@ -464,7 +449,7 @@ export async function generateProfileSvg(data: GithubProfileData): Promise<strin
         />
 
         ${createText(1830, 46, 'LIVE', {
-            size: 14,
+            size: 16,
             letterSpacing: 3,
         })}
 
@@ -500,9 +485,9 @@ export async function generateProfileSvg(data: GithubProfileData): Promise<strin
             />
 
             ${createText(portrait.x + 26, portrait.y + 29, '// IDENTITY_MODULE', {
-                size: 12,
+                size: 16,
                 color: COLORS.primary,
-                letterSpacing: 1,
+                letterSpacing: 2,
             })}
 
             <!-- Scanline: glow e linha fina se movem juntos -->
@@ -515,7 +500,7 @@ export async function generateProfileSvg(data: GithubProfileData): Promise<strin
                         height="60"
                         fill="url(#scanline-gradient)"
                     />
-                    
+
                     <line
                         x1="${portrait.x}"
                         y1="${portrait.y + 30}"
@@ -525,7 +510,7 @@ export async function generateProfileSvg(data: GithubProfileData): Promise<strin
                         stroke-width="2"
                         stroke-opacity="0.3"
                     />
-                    
+
                     <animateTransform
                         attributeName="transform"
                         type="translate"
@@ -553,17 +538,17 @@ export async function generateProfileSvg(data: GithubProfileData): Promise<strin
         />
 
         ${createText(info.x + 30, info.y + 29, '// SYSTEM_INFO', {
-            size: 12,
+            size: 16,
             color: COLORS.primary,
-            letterSpacing: 1,
+            letterSpacing: 2,
         })}
 
         ${infoRows}
 
         ${createText(745, 405, '// LANGUAGES_MODULE', {
-            size: 12,
+            size: 16,
             color: COLORS.primary,
-            letterSpacing: 1,
+            letterSpacing: 2,
         })}
 
         ${languages}
