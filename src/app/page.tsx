@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 
-import { ProfileHero } from '@/components/widgets/profile-hero/ProfileHero';
+import { ProfileBanner } from '@/components/widgets/ProfileBanner';
 import { getGithubProfileData } from '@/lib/github/data';
 
 const DEFAULT_GITHUB_USERNAME = 'itsmesiq';
@@ -17,7 +17,11 @@ async function ProfileContent({ searchParams }: HomeProps) {
 
     const githubData = await getGithubProfileData(githubUsername);
 
-    return <ProfileHero data={githubData} />;
+    return (
+        <>
+            <ProfileBanner />
+        </>
+    );
 }
 
 export default function Home({ searchParams }: HomeProps) {

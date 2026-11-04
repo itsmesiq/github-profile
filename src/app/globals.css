@@ -2,11 +2,12 @@
 
 :root {
     --background: #08080b;
-    --foreground: #f2f0f5;
-    --muted: #a7a7b3;
+    --foreground: #f0f0f0;
+    --muted: #b3b3b3;
     --surface: #111116;
     --stroke: #1c1c24;
-    --primary: #3df2bc;
+    --primary: #ff6b2c;
+    --accent: #ff9a55;
     --secondary: #ff2d78;
     --tertiary: #c4b5fd;
 }
@@ -18,12 +19,13 @@
     --color-surface: var(--surface);
     --color-stroke: var(--stroke);
     --color-primary: var(--primary);
+    --color-accent: var(--accent);
     --color-secondary: var(--secondary);
     --color-tertiary: var(--tertiary);
 
-    --font-sans: var(--font-inter);
+    --font-sans: var(--font-outfit);
     --font-consolas: Consolas, var(--font-jetbrains-mono), monospace;
-    --font-jetbrains: var(--font-jetbrains-mono);
+    --font-lexend: var(--font-lexend);
 }
 
 * {
@@ -68,5 +70,20 @@ body {
 
     100% {
         transform: translateY(0);
+    }
+}
+
+@layer components {
+    .diamond-gradient-border {
+        padding: 6px;
+        border-radius: 40px;
+
+        background:
+            linear-gradient(to top left, #fde67e 0%, #ff6b2c 100%) top left / 50% 50% no-repeat,
+            linear-gradient(to top right, #fde67e 0%, #ff6b2c 100%) top right / 50% 50% no-repeat,
+            linear-gradient(to bottom left, #fde67e 0%, #ff6b2c 100%) bottom left / 50% 50%
+                no-repeat,
+            linear-gradient(to bottom right, #fde67e 0%, #ff6b2c 100%) bottom right / 50% 50%
+                no-repeat;
     }
 }
