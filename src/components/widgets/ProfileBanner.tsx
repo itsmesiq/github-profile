@@ -4,7 +4,7 @@ import { techStack } from '@/data/tech-stack';
 
 export function ProfileBanner() {
     return (
-        <article className="diamond-gradient-border w-full">
+        <article className="diamond-gradient-border w-full" data-export="profile-banner">
             <div className="relative flex w-full rounded-[40px] bg-background">
                 <div className="relative z-10 flex w-full items-center gap-8 p-8">
                     <Image
